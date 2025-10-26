@@ -90,7 +90,7 @@ function App() {
 
   // 🔹 прогресс
   const increaseProgress = () => {
-    // чтобы прогресс не выходил за 100%
+  
     setProgress(prev => prev+10)
   }
 
