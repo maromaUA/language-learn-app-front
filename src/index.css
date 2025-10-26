@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+body{
+  min-height: 100vh;
+  background-color:#030712;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
