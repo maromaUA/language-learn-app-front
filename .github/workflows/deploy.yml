@@ -24,5 +24,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}  # Replace with your AWS region
         run: |
-          aws s3 sync . s3://language-app-front-end/
+          aws s3 sync dist/ s3://language-app-front-end/ --delete
  
