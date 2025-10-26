@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base:"/language-learn-app-front/",
+  base:"/",
   plugins: [
     react({
       babel: {
