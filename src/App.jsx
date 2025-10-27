@@ -1,22 +1,12 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import './App.css'
+import axios from 'axios'
+
 
 function App() {
-  // исходный массив
-  const arr = [
-    { verb: "estar", translation: "to be" },
-    { verb: "tener", translation: "to have" },
-    { verb: "hacer", translation: "to do" },
-    { verb: "ir", translation: "to go" },
-    { verb: "venir", translation: "to come" },
-    { verb: "decir", translation: "to say" },
-    { verb: "poder", translation: "can" },
-    { verb: "querer", translation: "to want, to love" },
-    { verb: "saber", translation: "to know" },
-    { verb: "ver", translation: "to see" }
-  ]
-
-  const [currentArr, setCurrentArr] = useState(arr)
+  
+  
+  const [currentArr, setCurrentArr] = useState([])
   const [current, setCurrent] = useState(0)
   const [answer, setAnswer] = useState('')
   const [feedback, setFeedback] = useState(false)
@@ -24,6 +14,29 @@ function App() {
   const [progress, setProgress] = useState(0)
   const [mistakes, setMistakes] = useState([])
   const [showStats, setShowStats] = useState(false)
+  const [loading, setLoading] = useState(true);
+
+  const API_URL = "https://17ljof7q2d.execute-api.eu-west-2.amazonaws.com/dev/getAllVerbs"
+
+useEffect(() => {
+    const fetchWords = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_URL}`);
+        // Если у тебя Lambda Proxy Integration, ответ может быть внутри response.data.body
+        console.log(response.data)
+        //const data = JSON.parse(response.data);
+        setCurrentArr([...response.data]);
+      } catch (err) {
+        console.error("Error fetching words:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWords();
+  }, []); // Пустой массив = вызов только при монтировании компонента
+
 
   // 🔹 проверка ответа
   const checkHandler = () => {
@@ -79,7 +92,7 @@ function App() {
 
   // 🔹 проверка перевода
   const checkAnswer = (answer) => {
-    if (answer.toLowerCase().trim() === currentArr[current].translation) {
+    if (currentArr[current].translation.includes(answer.toLowerCase().trim())) {
       setFeedback(true)
       return true
     } else {
@@ -95,14 +108,16 @@ function App() {
   }
 
   let message = ''
+  if(currentArr.length>0){
   if (feedback) {
     message = "✅ Exactly"
   } else {
-    message = `❌ Right answer is "${currentArr[current].translation}"`
+    message = `❌ Right answer is ${currentArr[current].translation[0]}`
   }
-
+}
+  if (loading) return <p>Loading...</p>;
   return (
-    <div className='flex flex-col justify-center items-center min-h-screen p-5 text-gray-200'>
+    <div className='flex flex-col justify-center items-center min-h-screen w-full md:w-2/3 lg:w-1/2 p-7 text-gray-200'>
       {/* Progress bar */}
       <div className='w-full bg-[#38464F] rounded-full h-4 mb-10'>
         <div
@@ -115,7 +130,7 @@ function App() {
       {!showStats ? (
         <div className='flex flex-col justify-center items-center gap-6'>
           <h1 className='text-3xl font-semibold'>Translate a verb</h1>
-          <div className='text-2xl'>{currentArr[current].verb}</div>
+          <div className='text-2xl'>{currentArr[current].word}</div>
 
           <input
             type="text"
