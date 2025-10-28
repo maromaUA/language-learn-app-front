@@ -1,11 +1,12 @@
 import { useState,useEffect } from 'react'
 import './App.css'
 import axios from 'axios'
+import { Statistics } from './Statistics'
 
 
 function App() {
   
-  
+  const [initialArr, setInitialArr] = useState([])
   const [currentArr, setCurrentArr] = useState([])
   const [current, setCurrent] = useState(0)
   const [answer, setAnswer] = useState('')
@@ -15,32 +16,68 @@ function App() {
   const [mistakes, setMistakes] = useState([])
   const [showStats, setShowStats] = useState(false)
   const [loading, setLoading] = useState(true);
+  const [mistakenWords, setMistakenWords] = useState([]);
+  const [level, setLevel] = useState(1)
 
   const API_URL = "https://17ljof7q2d.execute-api.eu-west-2.amazonaws.com/dev/getAllVerbs"
 
+//  const populateArrayLevel = () => {
+//   const arr = initialArr.filter(elem=>elem.level===level)
+  
+//   setCurrentArr([...arr])
+//  }
+
+
+ 
+  const nextLevelHandler = () => {
+    setLevel(prev=>prev+1)
+    restartHandler()
+  }
+
+  const restartHandler= () => {
+    //  fetchWords();
+      setCurrent(0);
+      setAnswer("");
+      setFeedback(false);
+      setShowFeedback(false);
+      setProgress(0);
+      setMistakes([]);
+      setShowStats(false);
+      setMistakenWords([])
+    
+  }
+
+
+
 useEffect(() => {
-    const fetchWords = async () => {
+     const fetchWords = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`${API_URL}`);
         // Если у тебя Lambda Proxy Integration, ответ может быть внутри response.data.body
         console.log(response.data)
         //const data = JSON.parse(response.data);
-        setCurrentArr([...response.data]);
+        setInitialArr([...response.data]);
       } catch (err) {
         console.error("Error fetching words:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchWords();
   }, []); // Пустой массив = вызов только при монтировании компонента
+
+  useEffect(() => {
+  if(initialArr.length > 0) {
+    setCurrentArr(initialArr.filter(elem => elem.level === level));
+  }
+}, [initialArr, level]);
 
 
   // 🔹 проверка ответа
   const checkHandler = () => {
-    checkAnswer(answer)
+    const isCorrect = checkAnswer(answer)
+    setFeedback(isCorrect)
     setShowFeedback(true)
   }
 
@@ -92,11 +129,17 @@ useEffect(() => {
 
   // 🔹 проверка перевода
   const checkAnswer = (answer) => {
+   
+     
     if (currentArr[current].translation.includes(answer.toLowerCase().trim())) {
-      setFeedback(true)
       return true
     } else {
-      setFeedback(false)
+      setMistakenWords((prev) => {
+      if (!prev.some(word => word === currentArr[current].verb)) {
+        return [...prev, currentArr[current].verb];
+      }
+      return prev;
+    });
       return false
     }
   }
@@ -107,14 +150,17 @@ useEffect(() => {
     setProgress(prev => prev+10)
   }
 
-  let message = ''
-  if(currentArr.length>0){
-  if (feedback) {
-    message = "✅ Exactly"
-  } else {
-    message = `❌ Right answer is ${currentArr[current].translation[0]}`
-  }
-}
+//   let message = ''
+//   if(currentArr.length>0){
+//   if (feedback) {
+//     message = "✅ Exactly"
+//   } else {
+//     message = `❌ Right answer is ${currentArr[current].translation[0]}`
+//   }
+// }
+
+  
+
   if (loading) return <p>Loading...</p>;
   return (
     <div className='flex flex-col justify-center items-center min-h-screen w-full md:w-2/3 lg:w-1/2 p-7 text-gray-200'>
@@ -129,21 +175,22 @@ useEffect(() => {
       {/* Main card */}
       {!showStats ? (
         <div className='flex flex-col justify-center items-center gap-6'>
-          <h1 className='text-3xl font-semibold'>Translate a verb</h1>
-          <div className='text-2xl'>{currentArr[current].word}</div>
+          <div className='text-lime-500 text-2xl font-bold'>LEVEL {level}</div>
+          <h1 className='text-2xl font-semibold'>Translate a verb </h1>
+          <div className='text-3xl font-bold'>{currentArr.length>0 && currentArr[current].verb}</div>
 
           <input
             type="text"
             value={answer}
             onChange={handleChange}
-            className='border border-gray-200 rounded-md p-2 w-64 text-gray-200 text-lg placeholder-gray-400 bg-transparent text-center'
+            className='border border-gray-200 rounded-md p-2 w-64 text-gray-200 text-2xl font-bold placeholder-gray-400 bg-transparent text-center'
             placeholder="Enter translation"
             autoFocus
           />
 
           <button
             onClick={checkHandler}
-            className='bg-[#93D334] text-2xl font-bold text-gray-900 px-4 py-2 rounded-md shadow-md hover:bg-gray-500 transition'
+            className='bg-[#93D334] text-2xl font-bold mt-2 text-gray-900 px-4 py-2 rounded-md shadow-md hover:bg-gray-500 transition'
           >
             Check
           </button>
@@ -156,7 +203,7 @@ useEffect(() => {
                   feedback ? "text-lime-500" : "text-red-500"
                 } text-2xl p-3 rounded-md text-center`}
               >
-                <div>{message}</div>
+                <div>{currentArr.length>0 && feedback ? "✅ Exactly" : <span>❌ Right answer is <span className='font-bold'>{currentArr[current].translation[0]}</span></span>}</div>
                 <button
                   onClick={nextHandler}
                   className={`${
@@ -170,7 +217,7 @@ useEffect(() => {
           </div>
         </div>
       ) : (
-        <div className='text-4xl text-amber-400 mt-10'>🎉 All correct!</div>
+        <Statistics mistakes={mistakenWords} restart={restartHandler} nextLevel={nextLevelHandler}/>
       )}
     </div>
   )
