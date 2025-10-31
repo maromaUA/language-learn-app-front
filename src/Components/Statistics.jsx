@@ -1,5 +1,5 @@
 export const Statistics = ({ mistakes, restart, nextLevel}) =>{
-console.log(mistakes)
+
  
     return(
         <div className='flex flex-col gap-2 text-2xl md:text-3xl lg:text-4xl text-gray-200'>
