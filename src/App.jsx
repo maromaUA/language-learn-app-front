@@ -111,7 +111,7 @@ function App() {
     setProgress(prev => prev+10)
   }
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>Loading....</p>;
   return (
     <div className='flex flex-col justify-center items-center min-h-screen w-full md:w-2/3 lg:w-1/2 p-7 text-gray-200'>
       {/* Progress bar */}
